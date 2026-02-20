@@ -24,6 +24,7 @@ func main() {
 		"check_interval", cfg.CheckInterval,
 		"dry_run", cfg.DryRun,
 		"slot_names", cfg.SlotNames,
+		"slot_exclude", cfg.SlotExclude,
 	)
 
 	ctx, cancel := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
@@ -61,7 +62,7 @@ func main() {
 }
 
 func runCheck(ctx context.Context, pool *pgxpool.Pool, cfg *Config) {
-	staleSlots, err := CheckSlots(ctx, pool, cfg.MaxWALKeepTime, cfg.SlotNames)
+	staleSlots, err := CheckSlots(ctx, pool, cfg.MaxWALKeepTime, cfg.SlotNames, cfg.SlotExclude)
 	if err != nil {
 		slog.Error("failed to check slots", "error", err)
 		return

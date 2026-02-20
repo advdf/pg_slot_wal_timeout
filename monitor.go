@@ -26,7 +26,7 @@ JOIN pg_ls_waldir() w ON w.name = pg_walfile_name(s.restart_lsn)
 WHERE s.restart_lsn IS NOT NULL
 `
 
-func CheckSlots(ctx context.Context, pool *pgxpool.Pool, maxAge time.Duration, slotNames []string) ([]StaleSlot, error) {
+func CheckSlots(ctx context.Context, pool *pgxpool.Pool, maxAge time.Duration, slotNames, slotExclude []string) ([]StaleSlot, error) {
 	rows, err := pool.Query(ctx, checkSlotsQuery)
 	if err != nil {
 		return nil, fmt.Errorf("query replication slots: %w", err)
@@ -42,7 +42,7 @@ func CheckSlots(ctx context.Context, pool *pgxpool.Pool, maxAge time.Duration, s
 		}
 		s.WALAge = time.Duration(walAgeSeconds * float64(time.Second))
 
-		if !matchSlotNames(s.Name, slotNames) {
+		if !matchSlotNames(s.Name, slotNames) || matchSlotNames(s.Name, slotExclude) {
 			continue
 		}
 

@@ -55,6 +55,15 @@ pg_slot_wal_timeout --dsn "postgres://localhost:5432/postgres" --slot-name "repl
 
 # Mix exact names and patterns
 pg_slot_wal_timeout --dsn "postgres://localhost:5432/postgres" --slot-name "critical_slot,staging_*"
+
+# Monitor all slots except specific ones
+pg_slot_wal_timeout --dsn "postgres://localhost:5432/postgres" --slot-exclude "do_not_touch"
+
+# Monitor all slots except those matching a pattern
+pg_slot_wal_timeout --dsn "postgres://localhost:5432/postgres" --slot-exclude "prod_*"
+
+# Combine: target staging slots but protect a specific one
+pg_slot_wal_timeout --dsn "postgres://localhost:5432/postgres" --slot-name "staging_*" --slot-exclude "staging_critical"
 ```
 
 ## Configuration
@@ -68,6 +77,7 @@ Every flag can also be set via an environment variable. Flags take precedence.
 | `--check-interval` | `PG_CHECK_INTERVAL` | `1m` | Interval between checks |
 | `--dry-run` | `PG_DRY_RUN` | `false` | Log stale slots without dropping them |
 | `--slot-name` | `PG_SLOT_NAME` | `*` (all) | Slot names to monitor (comma-separated, glob patterns allowed) |
+| `--slot-exclude` | `PG_SLOT_EXCLUDE` | *(none)* | Slot names to exclude (comma-separated, glob patterns allowed) |
 
 ## Running as a systemd service
 
