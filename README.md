@@ -44,8 +44,17 @@ pg_slot_wal_timeout \
 # Dry-run — log what would be dropped without actually dropping
 pg_slot_wal_timeout --dsn "postgres://localhost:5432/postgres" --dry-run
 
-# Only monitor slots matching a pattern
-pg_slot_wal_timeout --dsn "postgres://localhost:5432/postgres" --slot-filter "replica_*"
+# Target a specific slot
+pg_slot_wal_timeout --dsn "postgres://localhost:5432/postgres" --slot-name my_replica_slot
+
+# Target multiple specific slots
+pg_slot_wal_timeout --dsn "postgres://localhost:5432/postgres" --slot-name "slot_a,slot_b,slot_c"
+
+# Use a glob pattern to match slot names
+pg_slot_wal_timeout --dsn "postgres://localhost:5432/postgres" --slot-name "replica_*"
+
+# Mix exact names and patterns
+pg_slot_wal_timeout --dsn "postgres://localhost:5432/postgres" --slot-name "critical_slot,staging_*"
 ```
 
 ## Configuration
@@ -58,7 +67,7 @@ Every flag can also be set via an environment variable. Flags take precedence.
 | `--max-wal-keep-time` | `PG_MAX_WAL_KEEP_TIME` | `1h` | Maximum WAL retention age (Go duration: `30m`, `1h`, `24h`, ...) |
 | `--check-interval` | `PG_CHECK_INTERVAL` | `1m` | Interval between checks |
 | `--dry-run` | `PG_DRY_RUN` | `false` | Log stale slots without dropping them |
-| `--slot-filter` | `PG_SLOT_FILTER` | `*` (all) | Glob pattern to filter slot names |
+| `--slot-name` | `PG_SLOT_NAME` | `*` (all) | Slot names to monitor (comma-separated, glob patterns allowed) |
 
 ## Running as a systemd service
 
@@ -105,7 +114,7 @@ ALTER ROLE slot_monitor SUPERUSER;  -- or grant specific privileges if PG 16+
 The daemon uses Go's structured logging (`slog`). Example output:
 
 ```
-2025/02/20 15:00:00 INFO starting pg_slot_wal_timeout dsn=postgres://localhost:5432/postgres max_wal_keep_time=1h0m0s check_interval=1m0s dry_run=false slot_filter=*
+2025/02/20 15:00:00 INFO starting pg_slot_wal_timeout dsn=postgres://localhost:5432/postgres max_wal_keep_time=1h0m0s check_interval=1m0s dry_run=false slot_names=[*]
 2025/02/20 15:00:00 INFO connected to PostgreSQL
 2025/02/20 15:00:00 WARN dropping stale slot slot=replica_old wal_age=2h15m33s restart_lsn=0/5000000
 2025/02/20 15:00:00 INFO dropping replication slot slot=replica_old
